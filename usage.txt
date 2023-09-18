@@ -1,0 +1,11 @@
+usage: randstr [-Lln] [length ...]		
+
+	-L, --upper
+		Include uppercase letters (A-Z)
+	-l, --lower
+		Include lowercase letters (a-z)
+	-n, --numbers
+		Include numeric digits (0-9)
+
+With no options given, all of the above filters will be active (passing -L, -l, and -n together is the same as passing none).
+The length of one or several strings to generate can also be given (if blank, it will be a single string of 8 characters).
