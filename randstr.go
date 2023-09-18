@@ -43,7 +43,7 @@ func main() {
 	}()
 	os.Exit(func() (ret int) {
 		var num int
-		var upper, lower, numbers bool
+		var upper, lower, numbers, hex bool
 		var out = bytes.NewBuffer(make([]byte, 0, os.Getpagesize()))
 		for _, a := range args {
 			switch a {
@@ -56,25 +56,27 @@ func main() {
 				upper = true
 			case "-n", "--numbers":
 				numbers = true
+			case "-x", "--hex":
+				hex = true
 			default:
 				n, err := strconv.Atoi(a)
 				if err != nil {
 					fmt.Fprintln(os.Stderr, "randstr:", err)
 					return 1
 				}
-				randstr(out, n, numbers, upper, lower)
+				randstr(out, n, numbers, upper, lower, hex)
 				num++
 			}
 		}
 		if num < 1 {
-			randstr(out, 8, numbers, upper, lower)
+			randstr(out, 8, numbers, upper, lower, hex)
 		}
 		out.WriteTo(os.Stdout)
 		return
 	}())
 }
 
-func randstr(out *bytes.Buffer, n int, numbers, upper, lower bool) {
+func randstr(out *bytes.Buffer, n int, numbers, upper, lower, hex bool) {
 	if !numbers && !upper && !lower {
 		numbers, upper, lower = true, true, true
 	}
@@ -84,10 +86,18 @@ func randstr(out *bytes.Buffer, n int, numbers, upper, lower bool) {
 				r = append(r, unicode.Range16{0x0030, 0x0039, 1})
 			}
 			if upper {
-				r = append(r, unicode.Range16{0x0041, 0x005a, 1})
+				if hex {
+					r = append(r, unicode.Range16{0x0041, 0x0046, 1})
+				} else {
+					r = append(r, unicode.Range16{0x0041, 0x005a, 1})
+				}
 			}
 			if lower {
-				r = append(r, unicode.Range16{0x0061, 0x007a, 1})
+				if hex {
+					r = append(r, unicode.Range16{0x0061, 0x0066, 1})
+				} else {
+					r = append(r, unicode.Range16{0x0061, 0x007a, 1})
+				}
 			}
 			return r
 		}(),
