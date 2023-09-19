@@ -6,30 +6,13 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
-	"strconv"
 	"unicode"
 )
 
 //go:embed usage.txt
 var usage string
 
-var args []string
 var random = make(chan byte)
-
-func init() {
-	args = make([]string, 0, len(os.Args[1:]))
-	for _, a := range os.Args[1:] {
-		if a[0] == '-' && len(a) > 1 {
-			if a[1] != '-' {
-				for _, c := range a[1:] {
-					args = append(args, string([]rune{'-', c}))
-				}
-				continue
-			}
-		}
-		args = append(args, a)
-	}
-}
 
 func main() {
 	go func() {
@@ -44,27 +27,30 @@ func main() {
 	os.Exit(func() (ret int) {
 		var num int
 		var upper, lower, numbers, hex bool
-		var out = bytes.NewBuffer(make([]byte, 0, os.Getpagesize()))
-		for _, a := range args {
-			switch a {
-			case "-h", "--help":
-				os.Stderr.WriteString(usage)
-				return 1
-			case "-l", "--lower":
-				lower = true
-			case "-L", "--upper":
-				upper = true
-			case "-n", "--numbers":
-				numbers = true
-			case "-x", "--hex":
-				hex = true
-			default:
-				n, err := strconv.Atoi(a)
-				if err != nil {
-					fmt.Fprintln(os.Stderr, "randstr:", err)
+		out := bytes.NewBuffer(make([]byte, 0, os.Getpagesize()))
+		for i := range args {
+			switch a := args[i].(type) {
+			case string:
+				switch a {
+				case "-h", "--help":
+					os.Stderr.WriteString(usage)
+					return 1
+				case "-l", "--lower":
+					lower = true
+				case "-L", "--upper":
+					upper = true
+				case "-n", "--numbers":
+					numbers = true
+				case "-x", "--hex":
+					hex = true
+				default:
+					// handle unrecognized
+					fmt.Fprintf(os.Stderr, "randstr: invalid argument: %q\n", a)
+					os.Stderr.WriteString(usage)
 					return 1
 				}
-				randstr(out, n, numbers, upper, lower, hex)
+			case int:
+				randstr(out, a, numbers, upper, lower, hex)
 				num++
 			}
 		}
